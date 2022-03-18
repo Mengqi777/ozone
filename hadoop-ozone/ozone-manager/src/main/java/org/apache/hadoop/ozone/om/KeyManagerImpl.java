@@ -2644,13 +2644,22 @@ public class KeyManagerImpl implements KeyManager {
               bucketName);
     }
 
+    countEntries=0;
     List<OmKeyInfo> keyInfoList = new ArrayList<>();
     for (OzoneFileStatus fileStatus : cacheFileMap.values()) {
       fileStatusFinalList.add(fileStatus);
       keyInfoList.add(fileStatus.getKeyInfo());
+      countEntries++;
+      if (countEntries >= numEntries) {
+        break;
+      }
     }
     for (OzoneFileStatus fileStatus : cacheDirMap.values()) {
+      if (countEntries >= numEntries) {
+        break;
+      }
       fileStatusFinalList.add(fileStatus);
+      countEntries++;
     }
     if (args.getLatestVersionLocation()) {
       slimLocationVersion(keyInfoList.toArray(new OmKeyInfo[0]));
@@ -2683,7 +2692,7 @@ public class KeyManagerImpl implements KeyManager {
             iterator = dirTable.iterator();
 
     iterator.seek(seekDirInDB);
-
+    countEntries = 0;
     while (iterator.hasNext() && numEntries - countEntries > 0) {
       OmDirectoryInfo dirInfo = iterator.value().getValue();
       if (deletedKeySet.contains(dirInfo.getPath())) {
@@ -2728,6 +2737,7 @@ public class KeyManagerImpl implements KeyManager {
     TableIterator<String, ? extends Table.KeyValue<String, OmKeyInfo>>
             iterator = keyTable.iterator();
     iterator.seek(seekKeyInDB);
+    countEntries = 0;
     while (iterator.hasNext() && numEntries - countEntries > 0) {
       OmKeyInfo keyInfo = iterator.value().getValue();
       if (deletedKeySet.contains(keyInfo.getPath())) {
